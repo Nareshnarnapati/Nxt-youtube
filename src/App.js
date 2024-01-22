@@ -1,25 +1,84 @@
-import logo from './logo.svg';
-import './App.css';
+import {Component} from 'react'
+import {Route, Redirect} from 'react-router-dom'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import ProtectedRoute from './components/ProtectedRoute'
+import Login from './components/Login'
+import Home from './components/Home'
+import VideoDetailView from './components/VideoItemDetailsRoute'
+import TrendingVideos from './components/TrendingRoute'
+import GamingVideos from './components/GamingRoute'
+import SavedVideos from './components/SavedVideosRoute'
+import NotFound from './components/NotFoundRoute'
+import NxtWatchContext from './Context/NxtWatchContext'
+
+import './App.css'
+
+class App extends Component {
+  state = {
+    savedVideos: [],
+    isDarkTheme: false,
+    activeTab: 'Home',
+  }
+
+  changeTab = tab => {
+    this.setState({activeTab: tab})
+  }
+
+  toggleTheme = () => {
+    this.setState(prevState => ({
+      isDarkTheme: !prevState.isDarkTheme,
+    }))
+  }
+
+  addVideo = video => {
+    const {savedVideos} = this.state
+    const index = savedVideos.findIndex(eachVideo => eachVideo.id === video.id)
+    if (index === -1) {
+      this.setState({savedVideos: [...savedVideos, video]})
+    } else {
+      savedVideos.splice(index, 1)
+      this.setState({savedVideos})
+    }
+  }
+
+  removeVideo = id => {
+    const {savedVideos} = this.state
+    const updatedSavedVideos = savedVideos.filter(
+      eachVideo => eachVideo.id !== id,
+    )
+    this.setState({savedVideos: updatedSavedVideos})
+  }
+
+  render() {
+    const {savedVideos, isDarkTheme, activeTab} = this.state
+    return (
+      <NxtWatchContext.Provider
+        value={{
+          savedVideos,
+          isDarkTheme,
+          activeTab,
+          toggleTheme: this.toggleTheme,
+          addVideo: this.addVideo,
+          changeTab: this.changeTab,
+        }}
+      >
+     
+          <Route exact path="/login" component={Login} />
+          <ProtectedRoute exact path="/" component={Home} />
+          <ProtectedRoute
+            exact
+            path="/videos/:id"
+            component={VideoDetailView}
+          />
+          <ProtectedRoute exact path="/trending" component={TrendingVideos} />
+          <ProtectedRoute exact path="/gaming" component={GamingVideos} />
+          <ProtectedRoute exact path="/saved-videos" component={SavedVideos} />
+          <Route path="/not-found" component={NotFound} />
+          <Redirect to="not-found" />
+        
+      </NxtWatchContext.Provider>
+    )
+  }
 }
 
-export default App;
+export default App
